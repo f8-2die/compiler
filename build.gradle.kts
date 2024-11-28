@@ -15,6 +15,17 @@ repositories {
     google()
 }
 
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(21)) // Или 21
+    }
+}
+tasks.withType<JavaCompile> {
+    sourceCompatibility = "21" // Или 21
+    targetCompatibility = "21" // Или 21
+}
+
+
 dependencies {
     // Note, if you develop a library, you should use compose.desktop.common.
     // compose.desktop.currentOs should be used in launcher-sourceSet
@@ -28,7 +39,7 @@ compose.desktop {
         mainClass = "MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Exe)
             packageName = "demo1"
             packageVersion = "1.0.0"
         }

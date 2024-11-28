@@ -1,5 +1,4 @@
 object LexicalAnalyzer {
-    // Ваши таблицы: служебные слова, разделители и т.д.
     val reservedWords: List<String> = listOf(
         "begin", "end", "dim", "let", "if", "then", "else",
         "end_else", "for", "do", "input", "output", "while",
@@ -46,15 +45,15 @@ object LexicalAnalyzer {
     }
 
     private fun toBinaryWithFraction(decimal: Double): String {
-        val integerPart = decimal.toInt() // Целая часть
-        val fractionalPart = decimal - integerPart // Дробная часть
+        val integerPart = decimal.toInt()
+        val fractionalPart = decimal - integerPart
 
         val binaryIntegerPart = integerPart.toString(2)
         val binaryFractionPart = StringBuilder()
 
         var fraction = fractionalPart
-        var iterations = 0 // Лимитируем количество итераций
-        while (fraction > 0 && iterations < 10) { // Не больше 10 знаков после точки
+        var iterations = 0
+        while (fraction > 0 && iterations < 10) {
             fraction *= 2
             val bit = fraction.toInt()
             binaryFractionPart.append(bit)
@@ -93,7 +92,7 @@ object LexicalAnalyzer {
             if (insideComment) {
                 if (currentChar == '*' && position + 1 < inputText.length && inputText[position + 1] == ')') {
                     insideComment = false
-                    position++ // Пропускаем ')'
+                    position++
                 }
                 position++
                 continue
@@ -105,11 +104,27 @@ object LexicalAnalyzer {
                     currentChar.isWhitespace() -> { /* Пропускаем пробелы */ }
                     currentChar == '(' && position + 1 < inputText.length && inputText[position + 1] == '*' -> {
                         insideComment = true
-                        position++ // Пропускаем '*'
+                        position++
                     }
-                    separators.contains(currentChar.toString()) -> {
-                        val positionInTable = separators.indexOf(currentChar.toString()) + 1
-                        out(2, positionInTable)
+                    separators.any { it.startsWith(currentChar.toString()) } -> {
+                        // Проверяем двухсимвольные разделители
+                        val twoCharSeparator = if (position + 1 < inputText.length) {
+                            separators.find { it == inputText.substring(position, position + 2) }
+                        } else null
+
+                        if (twoCharSeparator != null) {
+                            val positionInTable = separators.indexOf(twoCharSeparator) + 1
+                            out(2, positionInTable)
+                            position++
+                        } else {
+                            // Проверяем односимвольные разделители
+                            val positionInTable = separators.indexOf(currentChar.toString()) + 1
+                            if (positionInTable > 0) {
+                                out(2, positionInTable)
+                            } else {
+                                results.add("Ошибка на символе: $currentChar")
+                            }
+                        }
                     }
                     currentChar.isLetter() || currentChar == '_' -> {
                         state = "I"
@@ -125,13 +140,14 @@ object LexicalAnalyzer {
                         results.add("Ошибка на символе: $currentChar")
                     }
                 }
+
                 "I" -> when {
                     currentChar?.isLetterOrDigit() == true || currentChar == '_' -> add(currentChar)
                     else -> {
                         val z = look(reservedWords)
                         if (z != 0) out(1, z) else out(4, put(identifiers))
                         state = "H"
-                        position-- // Откат назад
+                        position--
                     }
                 }
                 "NUM" -> when {
@@ -169,7 +185,7 @@ object LexicalAnalyzer {
                         }
 
                         state = "H"
-                        position-- // Откат назад
+                        position--
                     }
                 }
             }
